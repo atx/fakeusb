@@ -120,9 +120,10 @@ class Server(metaclass=ServerMeta):
                 idx += 16
             return idx
 
-        types = [0xff] * 32
-        intervals = [0xff] * 32
-        interfaces = [0x00] * 32
+        length = 32
+        types = [0xff] * length
+        intervals = [0xff] * length
+        interfaces = [0x00] * length
         for intfd in self.interface_descriptors:
             for epd in intfd.endpoints:
                 if not hasattr(epd, "endpoint_address"):
@@ -148,13 +149,25 @@ class Server(metaclass=ServerMeta):
     async def connect(self):
         self.send_ep_info()
 
+        length = 32
+        interfaces = [0xff] * length
+        classes = [0xff] * length
+        subclasses = [0xff] * length
+        protocols = [0xff] * length
         intfs = sorted(self.interface_descriptors, key=lambda x: x.interface_number)
+        for ind in intfs:
+            i = ind.interface_number
+            interfaces[i] = ind.interface_number
+            classes[i] = ind.interface_class
+            subclasses[i] = ind.interface_subclass
+            protocols[i] = ind.interface_protocol
+
         packet = protocol.InterfaceInfo(
             interface_count=len(self.interface_descriptors),
-            interface=bytes([x.interface_number for x in intfs]).ljust(32, b"\xff"),
-            interface_class=bytes([x.interface_class for x in intfs]).ljust(32, b"\xff"),
-            interface_subclass=bytes([x.interface_subclass for x in intfs]).ljust(32, b"\x00"),
-            interface_protocol=bytes([x.interface_class for x in intfs]).ljust(32, b"\x00"),
+            interface=interfaces,
+            interface_class=classes,
+            interface_subclass=subclasses,
+            interface_protocol=protocols,
         )
         self.send_packet(packet)
 
