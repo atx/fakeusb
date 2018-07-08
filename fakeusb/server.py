@@ -15,8 +15,9 @@ class ServerMeta(type):
         for base in bases:
             base_handlers.update(getattr(base, "packet_handlers", dict()))
         if "packet_handlers" in dict_:
-            base_handlers.update({k.type_id: v for k, v in dict_["packet_handlers"].items()})
+            base_handlers.update({k: v for k, v in dict_["packet_handlers"].items()})
         dict_["packet_handlers"] = base_handlers
+        dict_["_id_to_packet_type"] = {k.type_id: k for k in base_handlers}
         return super().__new__(meta, name, bases, dict_)
 
 
@@ -107,10 +108,7 @@ class Server(metaclass=ServerMeta):
     }
 
     async def handle_packet(self, header, packet):
-        if header.type_ not in type(self).packet_handlers:
-            log.error("Unable to handle packet type type_ {}".format(header.type_))
-            return
-        await type(self).packet_handlers[header.type_](self, header, packet)
+        await self.packet_handlers[self._id_to_packet_type[header.type_]](self, header, packet)
 
     def send_ep_info(self):
 
@@ -191,12 +189,11 @@ class Server(metaclass=ServerMeta):
 
                 # Then the packet
                 data = await self.reader.readexactly(header.length)
-                if header.type_ in protocol.type_registry:
-                    packet = protocol.type_registry[header.type_].unserialize(data)
+                if header.type_ in self._id_to_packet_type:
+                    packet = self._id_to_packet_type[header.type_].unserialize(data)
                     log.debug("Got packet #{} {}".format(header.id_, packet))
                     await self.handle_packet(header, packet)
                 else:
-                    log.debug("Got header {}".format(header))
-                    log.debug("Got data {}".format(data))
+                    log.error("Unable to handle packet type {}".format(header.type_))
         except asyncio.streams.IncompleteReadError:
             log.info("Connection terminated by the client")

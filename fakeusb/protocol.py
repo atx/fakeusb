@@ -33,9 +33,6 @@ class Status(enum.IntEnum):
     Babble = 6
 
 
-type_registry = dict()
-
-
 class Meta(type):
 
     @classmethod
@@ -74,8 +71,6 @@ class Meta(type):
         return super().__new__(meta, class_name, bases, dict_)
 
     def __init__(class_, name, bases, dict_):
-        if hasattr(class_, "type_id"):
-            type_registry[class_.type_id] = class_
         return super().__init__(name, bases, dict_)
 
 
