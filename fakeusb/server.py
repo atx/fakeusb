@@ -113,11 +113,13 @@ class Server(metaclass=ServerMeta):
         await type(self).packet_handlers[header.type_](self, header, packet)
 
     def send_ep_info(self):
-        attr_to_type = {
-           usb.EndpointAttribute.CONTROL: protocol.EpInfo.Type.CONTROL,
-           usb.EndpointAttribute.BULK: protocol.EpInfo.Type.BULK,
-           usb.EndpointAttribute.INTERRUPT: protocol.EpInfo.Type.INTERRUPT,
-        }
+
+        def ep_to_idx(n):
+            idx = n & ~0x80
+            if n & 0x80:
+                idx += 16
+            return idx
+
         types = [0xff] * 32
         intervals = [0xff] * 32
         interfaces = [0x00] * 32
@@ -125,15 +127,16 @@ class Server(metaclass=ServerMeta):
             for epd in intfd.endpoints:
                 if not hasattr(epd, "endpoint_address"):
                     continue  # TODO This is for CDC to allow trailing data, make nicer...
-                idx = epd.endpoint_address & ~0x80
-                if epd.endpoint_address & 0x80:
-                    idx += 16
-                types[idx] = attr_to_type[epd.bm_attributes]
+                idx = ep_to_idx(epd.endpoint_address)
+                types[idx] = int(epd.bm_attributes)
                 intervals[idx] = epd.interval
                 interfaces[idx] = intfd.interface_number
-        # TODO: Should this be here?
-        types[0] = protocol.EpInfo.Type.CONTROL
-        interfaces[0] = 0
+
+        for n in [0x00, 0x80]:
+            idx = ep_to_idx(n)
+            types[idx] = protocol.EpInfo.Type.CONTROL
+            intervals[idx] = 0xff
+            interfaces[idx] = 0
 
         packet = protocol.EpInfo(
             type_=types,

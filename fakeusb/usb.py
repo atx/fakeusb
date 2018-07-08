@@ -18,6 +18,7 @@ class DescriptorType(enum.IntEnum):
 class EndpointAttribute(enum.IntEnum):
     # TODO: More of these?
     CONTROL = 0
+    ISO = 1
     BULK = 2
     INTERRUPT = 3
 
