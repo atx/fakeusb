@@ -33,54 +33,6 @@ class Status(enum.IntEnum):
     Babble = 6
 
 
-class Capabilities(enum.IntEnum):
-    BulkStreams = 0
-    ConnectDeviceVersion = 1
-    Filter = 2
-    DeviceDisconnectAck = 3
-    EpInfoMaxPacketSize = 4
-    Bits64Ids = 5
-    Bits32BulkLength = 6
-    BulkReceiving = 7
-
-
-class Types(enum.IntEnum):
-    Hello = 0
-    DeviceConnect = 1
-    DeviceDisconnect = 2
-    Reset = 3
-    InterfaceInfo = 4
-    EpInfo = 5
-    SetConfiguration = 6
-    GetConfiguration = 7
-    ConfigurationStatus = 8
-    SetAltSetting = 9
-    GetAltSetting = 10
-    AltSettingStatus = 11
-    StartIsoStream = 12
-    StopIsoStream = 13
-    IsoStreamStatus = 14
-    StartInterruptReceiving = 15
-    StopInterruptReceiving = 16
-    InterruptReceivingStatus = 17
-    AllocBulkStreams = 18
-    FreeBulkStreams = 19
-    BulkStreamsStatus = 20
-    CancelDataPacket = 21
-    FilterReject = 22
-    FilterFilter = 23
-    DeviceDisconnectAck = 24
-    StartBulkReceiving = 25
-    StopBulkReceiving = 26
-    BulkReceivingStatus = 27
-
-    ControlPacket = 100
-    BulkPacket = 101
-    IsoPacket = 102
-    InterruptPacket = 103
-    BufferedBulkPacket = 104
-
-
 type_registry = dict()
 
 
