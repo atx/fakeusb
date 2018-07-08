@@ -84,10 +84,11 @@ class Server(metaclass=ServerMeta):
             data = []
             log.warn("Unhandled control request {}".format(packet))
 
-        # TODO: Properly copy the packet...
-        packet.data = data
-        packet.length = len(packet.data)
-        self.send_packet(packet, id_=header.id_)
+        response = packet.derive(
+            data=data,
+            length=len(data)
+        )
+        self.send_packet(response, id_=header.id_)
 
     async def handle_configuration(self, header, packet):
         response = protocol.ConfigurationStatus(

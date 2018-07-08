@@ -134,11 +134,24 @@ class Base(metaclass=Meta):
             val = None
             if name in kwargs:
                 val = kwargs[name]
+                del kwargs[name]
             elif hasattr(type(self), name):
                 val = getattr(type(self), name)
             else:
                 raise KeyError("Expected attribute '{}' not found in kwargs!".format(name))
-            setattr(self, name, val)
+            super().__setattr__(name, val)
+        if kwargs:
+            raise KeyError("Extraneous constructor arguments {}".format(kwargs))
+
+    def derive(self, **kwargs):
+        merged_kwargs = {
+            name: getattr(self, name) for name, _ in self._fields
+        }
+        merged_kwargs.update(kwargs)
+        return type(self)(**merged_kwargs)
+
+    def __setattr__(self, name, val):
+        raise AttributeError("Can't set attribute")
 
     @property
     def raw_values(self):

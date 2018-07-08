@@ -154,20 +154,29 @@ class CDCServer(server.Server):
         if packet.endpoint == CDCServer.ENDPOINT_RX:
             log.info("Received {}".format(packet.data))
             self._buffer.extend(bytes(packet.data).upper())
-            packet.data = []
-            packet.status = p.Status.Success
+
+            data = []
+            status = p.Status.Success
+            length = packet.length
         elif packet.endpoint == CDCServer.ENDPOINT_TX:
-            packet.data, self._buffer = self._buffer[:packet.length], self._buffer[packet.length:]
-            packet.length = len(packet.data)
-            packet.status = p.Status.Success
+            data, self._buffer = self._buffer[:packet.length], self._buffer[packet.length:]
+            status = p.Status.Success
+            length = len(data)
+
             if packet.data:
                 log.info("Polled for data, sent {}".format(packet.data))
         else:
-            packet.data = []
-            packet.status = p.Status.Inval
+            data = []
+            status = p.Status.Inval
+            length = 0
             log.warn("Received bulk transfer on invalid endpoint {:2x}".format(packet.endpoint))
 
-        self.send_packet(packet, id_=header.id_)
+        response = packet.derive(
+            data=data,
+            status=status,
+            length=length,
+        )
+        self.send_packet(response, id_=header.id_)
 
     async def handle_hello(self, header, packet):
         await super().handle_hello(header, packet)

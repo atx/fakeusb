@@ -34,6 +34,12 @@ def test_simple_unserialization():
     assert p.alpha == 1 and p.beta == 0x7700 and p.gamma == 0x112233
 
 
+def test_simple_derive():
+    a = SimplePacket(alpha=1, beta=0x7700, gamma=0x112233)
+    b = a.derive(beta=123)
+    assert b.alpha == a.alpha and b.beta == 123 and b.gamma == a.gamma
+
+
 class ZeroLengthPacket(p.Base):
     pass
 
