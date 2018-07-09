@@ -124,8 +124,6 @@ class Server(metaclass=ServerMeta):
         interfaces = [0x00] * length
         for intfd in self.interface_descriptors:
             for epd in intfd.endpoints:
-                if not hasattr(epd, "endpoint_address"):
-                    continue  # TODO This is for CDC to allow trailing data, make nicer...
                 idx = ep_to_idx(epd.endpoint_address)
                 types[idx] = int(epd.bm_attributes)
                 intervals[idx] = epd.interval

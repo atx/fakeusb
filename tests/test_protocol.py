@@ -141,6 +141,7 @@ class TestVariable:
             two=0x3311,
             arr=[1, 2, 3, 4, 5]
         )
+        assert TestVariable.ArrayPacket.is_variable
         assert TestVariable.ArrayPacket.raw_length == 5
         assert p.serialize() == bytes([
             0x66,
@@ -157,6 +158,25 @@ class TestVariable:
         p = TestVariable.ArrayPacket.unserialize(bs)
         assert p.one == 0x66 and p.two == 0x3311
         assert p.arr == (1, 2, 3, 4, 5)
+
+    class OnlyArrayPacket(p.Base):
+        arr: p.Array(p.T.U16)
+
+    def test_only_serialize(self):
+        p = TestVariable.OnlyArrayPacket(
+            arr=[4, 3, 2, 1]
+        )
+        assert TestVariable.OnlyArrayPacket.raw_length == 0
+        assert p.serialize() == bytes([
+            0x04, 0x00,  0x03, 0x00,  0x02, 0x00,  0x01, 0x00
+        ])
+
+    def test_only_unserialize(self):
+        bs = bytes([
+            0x04, 0x00,  0x03, 0x00,  0x02, 0x00,  0x01, 0x00
+        ])
+        p = TestVariable.OnlyArrayPacket.unserialize(bs)
+        assert p.arr == (4, 3, 2, 1)
 
     class ArrayNontrivialPacket(p.Base):
         one: p.T.U32
@@ -194,6 +214,23 @@ class TestVariable:
         assert p.one == 0xaabb1233 and p.two == 0x11
         print(p.arr)
         assert len(p.arr) == 3
+
+    class MultipleVariablePacket(p.Base):
+        one: p.T.U8
+        arr1: p.Array(p.T.U8)
+        arr2: p.Array(p.T.U16)
+
+    def test_multiple_serialize(self):
+        p = TestVariable.MultipleVariablePacket(
+            one=0x11,
+            arr1=[1, 2, 3],
+            arr2=[0x33, 0x44, 0x55]
+        )
+        assert p.serialize() == bytes([
+            0x11,
+            0x01, 0x02, 0x03,
+            0x33, 0x00,  0x44, 0x00,  0x55, 0x00
+        ])
 
 
 class TestDefault:

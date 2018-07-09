@@ -116,8 +116,8 @@ class CDCServer(server.Server):
             interface_subclass=USB_CDC_SUBCLASS_ACM,
             interface_protocol=USB_CDC_PROTOCOL_AT,
             i_interface=0,
-            # TODO Fix this ugly hack to get the extra data on there
-            endpoints=(endpoint_descriptors_comm + cdc_descriptors),
+            endpoints=endpoint_descriptors_comm,
+            extra=cdc_descriptors,
         ),
         # Data interface
         usb.InterfaceDescriptor(

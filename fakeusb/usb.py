@@ -71,6 +71,7 @@ class InterfaceDescriptor(Base):
     interface_protocol: T.U8
     i_interface: T.U8
     endpoints: Array(EndpointDescriptor)
+    extra: Array(None) = tuple()
 
 
 class ConfigurationDescriptor(Base):
