@@ -108,8 +108,128 @@ class ConfigurationStatus(Base):
     configuration: T.U8
 
 
+class SetAltSetting(Base):
+    type_id = 9
+
+    interface: T.U8
+    alt: T.U8
+
+
+class GetAltSetting(Base):
+    type_id = 10
+
+    interface: T.U8
+
+
+class AltSettingStatus(Base):
+    type_id = 11
+
+    status: T.U8
+    interface: T.U8
+    alt: T.U8
+
+
+class StartIsoStream(Base):
+    type_id = 12
+
+    endpoint: T.U8
+    pkts_per_urb: T.U8
+    no_urbs: T.U8
+
+
+class StopIsoStream(Base):
+    type_id = 13
+
+    endpoint: T.U8
+
+
+class IsoStreamStatus(Base):
+    type_id = 14
+
+    status: T.U8
+    endpoint: T.U8
+
+
+class StartInterruptReceiving(Base):
+    type_id = 15
+
+    endpoint: T.U8
+
+
+class StopInterruptReceiving(Base):
+    type_id = 16
+
+    endpoint: T.U8
+
+
+class InterruptReceivingStatus(Base):
+    type_id = 17
+
+    status: T.U8
+    endpoint: T.U8
+
+
+class AllocBulkStreams(Base):
+    type_id = 18
+
+    endpoints: T.U32
+    no_streams: T.U32
+
+
+class FreeBulkStreams(Base):
+    type_id = 19
+
+    endpoints: T.U32
+
+
+class BulkStreamsStatus(Base):
+    type_id = 20
+
+    endpoints: T.U32
+    no_streams: T.U32
+    status: T.U8
+
+
 class CancelDataPacket(Base):
     type_id = 21
+
+
+class FilterReject(Base):
+    type_id = 22
+
+
+class FilterFilter(Base):
+    type_id = 23
+
+    string: Array(T.U8)
+
+
+class DeviceDisconnectAck(Base):
+    type_id = 24
+
+
+class StartBulkReceiving(Base):
+    type_id = 25
+
+    stream_id: T.U32
+    bytes_per_transfer: T.U32
+    endpoint: T.U8
+    no_transfers: T.U8
+
+
+class StopBulkReceiving(Base):
+    type_id = 26
+
+    stream_id: T.U32
+    endpoint: T.U8
+
+
+class BulkReceivingStatus(Base):
+    type_id = 27
+
+    stream_id: T.U32
+    endpoint: T.U8
+    status: T.U8
 
 
 class ControlPacket(Base):
@@ -132,4 +252,32 @@ class BulkPacket(Base):
     status: T.U8
     length: T.U16
     stream_id: T.U32
+    data: Array(T.U8)
+
+
+class IsoPacket(Base):
+    type_id = 102
+
+    endpoint: T.U8
+    status: T.U8
+    length: T.U16
+    data: Array(T.U8)
+
+
+class InterruptPacket(Base):
+    type_id = 103
+
+    endpoint: T.U8
+    status: T.U8
+    length: T.U16
+    data: Array(T.U8)
+
+
+class BufferedBulkPacket(Base):
+    type_id = 104
+
+    stream_id: T.U32
+    length: T.U32
+    endpoint: T.U8
+    status: T.U8
     data: Array(T.U8)
