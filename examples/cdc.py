@@ -2,10 +2,9 @@
 
 import asyncio
 import logging
-import queue
 
-import fakeusb.protocol as p
-from fakeusb import usb, server
+import fakeusb.serdes as sd
+from fakeusb import usb, server, protocol
 
 
 log = logging.getLogger(__name__)
@@ -13,31 +12,31 @@ log = logging.getLogger(__name__)
 
 class CDC:
 
-    class HeaderDescriptor(p.Base):
-        function_length: p.T.U8 = 5
-        descriptor_type: p.T.U8 = 0x24
-        descriptor_subtype: p.T.U8 = 0x00
-        bcd_cdc: p.T.U16 = 0x0110
+    class HeaderDescriptor(sd.Base):
+        function_length: sd.T.U8 = 5
+        descriptor_type: sd.T.U8 = 0x24
+        descriptor_subtype: sd.T.U8 = 0x00
+        bcd_cdc: sd.T.U16 = 0x0110
 
-    class UnionDescriptor(p.Base):
-        function_length: p.T.U8 = 5
-        descriptor_type: p.T.U8 = 0x24
-        descriptor_subtype: p.T.U8 = 0x06
-        control_interface: p.T.U8
-        subordinate_interface0: p.T.U8
+    class UnionDescriptor(sd.Base):
+        function_length: sd.T.U8 = 5
+        descriptor_type: sd.T.U8 = 0x24
+        descriptor_subtype: sd.T.U8 = 0x06
+        control_interface: sd.T.U8
+        subordinate_interface0: sd.T.U8
 
-    class CallManagementDescriptor(p.Base):
-        function_length: p.T.U8 = 5
-        descriptor_type: p.T.U8 = 0x24
-        descriptor_subtype: p.T.U8 = 0x01
-        bm_capabilities: p.T.U8
-        data_interface: p.T.U8
+    class CallManagementDescriptor(sd.Base):
+        function_length: sd.T.U8 = 5
+        descriptor_type: sd.T.U8 = 0x24
+        descriptor_subtype: sd.T.U8 = 0x01
+        bm_capabilities: sd.T.U8
+        data_interface: sd.T.U8
 
-    class ACMDescriptor(p.Base):
-        function_length: p.T.U8 = 4
-        descriptor_type: p.T.U8 = 0x24
-        descriptor_subtype: p.T.U8 = 0x02
-        bm_capabilities: p.T.U8
+    class ACMDescriptor(sd.Base):
+        function_length: sd.T.U8 = 4
+        descriptor_type: sd.T.U8 = 0x24
+        descriptor_subtype: sd.T.U8 = 0x02
+        bm_capabilities: sd.T.U8
 
 
 class CDCServer(server.Server):
@@ -156,18 +155,18 @@ class CDCServer(server.Server):
             self._buffer.extend(bytes(packet.data).upper())
 
             data = []
-            status = p.Status.Success
+            status = protocol.Status.Success
             length = packet.length
         elif packet.endpoint == CDCServer.ENDPOINT_TX:
             data, self._buffer = self._buffer[:packet.length], self._buffer[packet.length:]
-            status = p.Status.Success
+            status = protocol.Status.Success
             length = len(data)
 
             if packet.data:
                 log.info("Polled for data, sent {}".format(packet.data))
         else:
             data = []
-            status = p.Status.Inval
+            status = protocol.Status.Inval
             length = 0
             log.warn("Received bulk transfer on invalid endpoint {:2x}".format(packet.endpoint))
 
@@ -183,8 +182,8 @@ class CDCServer(server.Server):
         await self.connect()
 
     packet_handlers = {
-        p.Hello: handle_hello,
-        p.BulkPacket: handle_bulk
+        protocol.Hello: handle_hello,
+        protocol.BulkPacket: handle_bulk
     }
 
 

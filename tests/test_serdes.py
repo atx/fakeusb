@@ -1,15 +1,16 @@
 
+
 import pytest
 
-import fakeusb.protocol as p
+from fakeusb.serdes import Array, Base, T
 
 
 class TestSimple:
 
-    class Packet(p.Base):
-        alpha: p.T.U8
-        beta: p.T.U16
-        gamma: p.T.U32
+    class Packet(Base):
+        alpha: T.U8
+        beta: T.U16
+        gamma: T.U32
 
     def test_init(self):
         assert TestSimple.Packet.raw_length == 1 + 2 + 4
@@ -39,7 +40,7 @@ class TestSimple:
 
 class TestZeroLength:
 
-    class Packet(p.Base):
+    class Packet(Base):
         pass
 
     def test_serialize(self):
@@ -53,10 +54,10 @@ class TestZeroLength:
 
 class TestNested:
 
-    class Packet(p.Base):
-        one: p.T.U16
+    class Packet(Base):
+        one: T.U16
         nested: TestSimple.Packet
-        two: p.T.U8
+        two: T.U8
 
     def test_init(self):
         assert TestNested.Packet.raw_length == 2 + TestSimple.Packet.raw_length + 1
@@ -97,10 +98,10 @@ class TestNested:
 
 class TestArray:
 
-    class Packet(p.Base):
-        one: p.T.U16
-        arr: p.Array(p.T.U8, 8)
-        two: p.T.U8
+    class Packet(Base):
+        one: T.U16
+        arr: Array(T.U8, 8)
+        two: T.U8
 
     def test_array_length(self):
         assert TestArray.Packet.raw_length == 2 + 8 + 1
@@ -130,10 +131,10 @@ class TestArray:
 
 class TestVariable:
 
-    class ArrayPacket(p.Base):
-        one: p.T.U8
-        two: p.T.U32
-        arr: p.Array(p.T.U16)
+    class ArrayPacket(Base):
+        one: T.U8
+        two: T.U32
+        arr: Array(T.U16)
 
     def test_serialize(self):
         p = TestVariable.ArrayPacket(
@@ -159,8 +160,8 @@ class TestVariable:
         assert p.one == 0x66 and p.two == 0x3311
         assert p.arr == (1, 2, 3, 4, 5)
 
-    class OnlyArrayPacket(p.Base):
-        arr: p.Array(p.T.U16)
+    class OnlyArrayPacket(Base):
+        arr: Array(T.U16)
 
     def test_only_serialize(self):
         p = TestVariable.OnlyArrayPacket(
@@ -178,10 +179,10 @@ class TestVariable:
         p = TestVariable.OnlyArrayPacket.unserialize(bs)
         assert p.arr == (4, 3, 2, 1)
 
-    class ArrayNontrivialPacket(p.Base):
-        one: p.T.U32
-        two: p.T.U8
-        arr: p.Array(TestSimple.Packet)
+    class ArrayNontrivialPacket(Base):
+        one: T.U32
+        two: T.U8
+        arr: Array(TestSimple.Packet)
 
     def test_nontrivial_serialize(self):
         p = TestVariable.ArrayNontrivialPacket(
@@ -215,10 +216,10 @@ class TestVariable:
         print(p.arr)
         assert len(p.arr) == 3
 
-    class MultipleVariablePacket(p.Base):
-        one: p.T.U8
-        arr1: p.Array(p.T.U8)
-        arr2: p.Array(p.T.U16)
+    class MultipleVariablePacket(Base):
+        one: T.U8
+        arr1: Array(T.U8)
+        arr2: Array(T.U16)
 
     def test_multiple_serialize(self):
         p = TestVariable.MultipleVariablePacket(
@@ -235,10 +236,10 @@ class TestVariable:
 
 class TestDefault:
 
-    class Packet(p.Base):
-        alpha: p.T.U16 = 0xa0
-        beta: p.T.U8
-        gamma: p.T.U8 = 0x11
+    class Packet(Base):
+        alpha: T.U16 = 0xa0
+        beta: T.U8
+        gamma: T.U8 = 0x11
 
     def test_init(self):
         p = TestDefault.Packet(alpha=0x44, beta=0x99)
