@@ -17,13 +17,13 @@ __all__ = [
 # See usb-redirection-protocol.txt for description of the structures
 
 class Status(enum.IntEnum):
-    Success = 0
-    Cancelled = 1
-    Inval = 2
-    Ioerror = 3
-    Stall = 4
-    Timeout = 5
-    Babble = 6
+    SUCCESS = 0
+    CANCELLED = 1
+    INVAL = 2
+    IOERROR = 3
+    STALL = 4
+    TIMEOUT = 5
+    BABBLE = 6
 
 
 class Header(Base):

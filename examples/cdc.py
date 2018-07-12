@@ -155,18 +155,18 @@ class CDCServer(server.Server):
             self._buffer.extend(bytes(packet.data).upper())
 
             data = []
-            status = protocol.Status.Success
+            status = protocol.Status.SUCCESS
             length = packet.length
         elif packet.endpoint == CDCServer.ENDPOINT_TX:
             data, self._buffer = self._buffer[:packet.length], self._buffer[packet.length:]
-            status = protocol.Status.Success
+            status = protocol.Status.SUCCESS
             length = len(data)
 
             if packet.data:
                 log.info("Polled for data, sent {}".format(packet.data))
         else:
             data = []
-            status = protocol.Status.Inval
+            status = protocol.Status.INVAL
             length = 0
             log.warn("Received bulk transfer on invalid endpoint {:2x}".format(packet.endpoint))
 

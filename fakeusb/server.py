@@ -93,7 +93,7 @@ class Server(metaclass=ServerMeta):
 
     async def handle_configuration(self, header, packet):
         response = protocol.ConfigurationStatus(
-            status=protocol.Status.Success,
+            status=protocol.Status.SUCCESS,
             configuration=self.configuration_number,
         )
         self.send_packet(response, id_=header.id_)
