@@ -14,6 +14,7 @@ class TestSimple:
 
     def test_init(self):
         assert TestSimple.Packet.raw_length == 1 + 2 + 4
+        assert TestSimple.Packet._element_count == 3
         p = TestSimple.Packet(alpha=1, beta=2, gamma=3)
         assert p.alpha == 1 and p.beta == 2 and p.gamma == 3
 
@@ -61,6 +62,7 @@ class TestNested:
 
     def test_init(self):
         assert TestNested.Packet.raw_length == 2 + TestSimple.Packet.raw_length + 1
+        assert TestNested.Packet._element_count == 1 + TestSimple.Packet._element_count + 1
         p = TestNested.Packet(
             one=1,
             nested=TestSimple.Packet(alpha=1, beta=2, gamma=3),
@@ -105,6 +107,7 @@ class TestArray:
 
     def test_array_length(self):
         assert TestArray.Packet.raw_length == 2 + 8 + 1
+        assert TestArray.Packet._element_count == 1 + 8 + 1
 
     def test_array_serialize(self):
         p = TestArray.Packet(
@@ -126,7 +129,7 @@ class TestArray:
         ])
         p = TestArray.Packet.unserialize(bs)
         assert p.one == 0xabcd and p.two == 0xbb
-        assert p.arr == list(range(8))
+        assert p.arr == tuple(range(8))
 
 
 class TestVariable:

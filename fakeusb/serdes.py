@@ -19,6 +19,7 @@ class T(enum.Enum):
 
     def __init__(self, format_, raw_length):
         self._format = format_
+        self._element_count = 1
         self.raw_length = raw_length
         self.is_variable = False
 
@@ -33,6 +34,7 @@ class Meta(type):
     def __new__(meta, class_name, bases, dict_):
         fields = []
         trailers = []
+        element_count = 0
         if "__annotations__" in dict_:
             raw_length = 0
             anns = dict_["__annotations__"]
@@ -47,6 +49,7 @@ class Meta(type):
                     if trailers:
                         print(fields, trailers, name, ann)
                         raise TypeError("A constant-length element in a variable trailer is not allowed")
+                    element_count += ann._element_count
                     fields.append(pair)
                     fmt += ann._format
                     raw_length += ann.raw_length
@@ -60,6 +63,7 @@ class Meta(type):
             # We are in a zero-length packet (or Base)
             pass
 
+        dict_["_element_count"] = element_count
         dict_["_fields"] = tuple(fields)
         dict_["_trailers"] = tuple(trailers)
         dict_["_all_fields"] = tuple(fields + trailers)
@@ -113,16 +117,17 @@ class Base(metaclass=Meta):
     @classmethod
     def _make_self(class_, vals, trailer_vals=[]):
         kwargs = dict()
+        i = 0
         for name, ann in class_._fields:
+            sub = vals[i:i+ann._element_count]
+            i += ann._element_count
             if hasattr(ann, "_make_self"):
-                kwargs[name] = ann._make_self(vals)
+                kwargs[name] = ann._make_self(sub)
             else:
-                kwargs[name] = vals.pop(0)
+                kwargs[name] = sub[0]
 
         if class_.is_variable or trailer_vals:
             if len(trailer_vals) != len(class_._trailers):
-                print(class_)
-                print(class_._trailers)
                 raise ValueError("Unexpected trailer_vals value {}".format(trailer_vals))
 
             for (name, ann), val in zip(class_._trailers, trailer_vals):
@@ -135,7 +140,7 @@ class Base(metaclass=Meta):
         if class_.is_empty:
             return class_()
 
-        vals = list(class_._struct.unpack(bs[:class_.raw_length]))
+        vals = class_._struct.unpack(bs[:class_.raw_length])
 
         if class_._trailers:
             if len(class_._trailers) > 1:
@@ -183,15 +188,15 @@ def Array(type_, length_=None):
         is_variable = not length_
 
         if length_:
-            length = length_
-            raw_length = length * _type.raw_length
+            _element_count = length_
+            raw_length = _element_count * _type.raw_length
 
         else:
-            length = 0
+            _element_count = 0
             raw_length = 0
 
-        if length:
-            _format = type_._format * length
+        if _element_count:
+            _format = type_._format * _element_count
             _struct = struct.Struct(b"=" + _format)
 
         def __init__(self, values):
@@ -199,10 +204,7 @@ def Array(type_, length_=None):
 
         @classmethod
         def _make_self(class_, vals):
-            ret = vals[:class_.length]
-            for _ in range(class_.length):
-                vals.pop(0)
-            return ret
+            return vals
 
         @classmethod
         def variable_unserialize(class_, bs):
@@ -216,8 +218,8 @@ def Array(type_, length_=None):
             vals = list(struct.unpack(fmt, bs))
             if hasattr(class_._type, "_make_self"):
                 new_vals = []
-                while vals:
-                    new_vals.append(class_._type._make_self(vals))
+                for i in range(0, len(vals), class_._type._element_count):
+                    new_vals.append(class_._type._make_self(vals[i:i+class_._type._element_count]))
                 vals = new_vals
             return tuple(vals)
 
