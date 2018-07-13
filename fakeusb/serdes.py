@@ -232,11 +232,7 @@ def Array(type_, length_=None):
         @classmethod
         def variable_serialize(class_, vals):
             if class_._type is None or hasattr(class_._type, "serialize"):
-                # TODO: Check if this is at least reasonably fast...
-                output = b""
-                for val in vals:
-                    output += val.serialize()
-                return output
+                return b"".join(val.serialize() for val in vals)
             else:
                 # TODO: Cache these?
                 fmt = class_._type._format*len(vals)
