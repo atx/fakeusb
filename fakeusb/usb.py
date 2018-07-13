@@ -16,7 +16,6 @@ class DescriptorType(enum.IntEnum):
 
 
 class EndpointAttribute(enum.IntEnum):
-    # TODO: More of these?
     CONTROL = 0
     ISO = 1
     BULK = 2
@@ -83,7 +82,6 @@ class ConfigurationDescriptor(Base):
     i_configuration: T.U8
     bm_attributes: T.U8
     max_power: T.U8
-    # TODO: More than one interface
     interfaces: Array(InterfaceDescriptor)
 
 

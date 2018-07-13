@@ -1,6 +1,7 @@
 
 
 import collections
+import functools
 import enum
 import struct
 
@@ -11,6 +12,12 @@ __all__ = [
 
 
 # See usb-redirection-protocol.txt for description of the structures
+
+@functools.lru_cache(maxsize=512)
+def make_struct_cached(format_):
+    # No padding!
+    return struct.Struct(b"=" + format_)
+
 
 class T(enum.Enum):
     U8 = (b"B", 1)
@@ -47,7 +54,6 @@ class Meta(type):
                     trailers.append(pair)
                 else:
                     if trailers:
-                        print(fields, trailers, name, ann)
                         raise TypeError("A constant-length element in a variable trailer is not allowed")
                     element_count += ann._element_count
                     fields.append(pair)
@@ -58,7 +64,7 @@ class Meta(type):
             # usbredir does not specify endianness, expects host byte order
             dict_["raw_length"] = raw_length
             dict_["_format"] = fmt
-            dict_["_struct"] = struct.Struct(b"=" + fmt)
+            dict_["_struct"] = make_struct_cached(fmt)
         else:
             # We are in a zero-length packet (or Base)
             pass
@@ -174,7 +180,7 @@ class Base(metaclass=Meta):
         return "<{} {}>".format(
             self.__class__.__name__,
             ", ".join(name + " = " + str(getattr(self, name))
-                      for name, ann in self._fields)
+                      for name, ann in self._all_fields)
         )
     __repr__ = __str__
 
@@ -197,7 +203,7 @@ def Array(type_, length_=None):
 
         if _element_count:
             _format = type_._format * _element_count
-            _struct = struct.Struct(b"=" + _format)
+            _struct = make_struct_cached(_format)
 
         def __init__(self, values):
             raise ValueError("This class is not supposed to be instantiated, use plain tuples instead")
@@ -214,8 +220,8 @@ def Array(type_, length_=None):
                 return tuple()
 
             count = len(bs) // class_._type.raw_length
-            fmt = b"=" + class_._type._format*count
-            vals = list(struct.unpack(fmt, bs))
+            fmt = class_._type._format*count
+            vals = list(make_struct_cached(fmt).unpack(bs))
             if hasattr(class_._type, "_make_self"):
                 new_vals = []
                 for i in range(0, len(vals), class_._type._element_count):
@@ -233,7 +239,7 @@ def Array(type_, length_=None):
                 return output
             else:
                 # TODO: Cache these?
-                fmt = (b"=" + class_._type._format*len(vals))
-                return struct.pack(fmt, *vals)
+                fmt = class_._type._format*len(vals)
+                return make_struct_cached(fmt).pack(*vals)
 
     return Array

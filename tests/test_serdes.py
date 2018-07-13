@@ -25,7 +25,6 @@ class TestSimple:
     def test_simple_serialization(self):
         p = TestSimple.Packet(alpha=1, beta=0x7700, gamma=0x112233)
         # Assuming little-endian packing
-        print(p._struct.format)
         assert p.serialize() == bytes([0x01, 0x00, 0x77, 0x33, 0x22, 0x11, 0x00])
 
     def test_unserialization(self):
@@ -216,7 +215,6 @@ class TestVariable:
         ])
         p = TestVariable.ArrayNontrivialPacket.unserialize(bs)
         assert p.one == 0xaabb1233 and p.two == 0x11
-        print(p.arr)
         assert len(p.arr) == 3
 
     class MultipleVariablePacket(Base):
